@@ -1,12 +1,10 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.configs.UsernameValidator;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.service.UserService;
@@ -21,24 +19,18 @@ public class AdminRestController {
     private final UserService userService;
 
     private final RoleRepository roleRepository;
+    private final UsernameValidator usernameValidator;
 
-    public AdminRestController(UserService userService, RoleRepository roleRepository) {
+    public AdminRestController(UserService userService, RoleRepository roleRepository, UsernameValidator usernameValidator) {
         this.userService = userService;
         this.roleRepository = roleRepository;
+        this.usernameValidator = usernameValidator;
     }
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> showAllUsers(){
         List<User> allUsers = userService.getAllUsers();
         return new ResponseEntity<>(allUsers, HttpStatus.OK);
-    }
-
-    @GetMapping("/user")
-    public ResponseEntity<User> getUser(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserId = authentication.getName();
-        User currentUser = userService.loadUserByUsername(currentUserId);
-        return ResponseEntity.ok(currentUser);
     }
 
     @GetMapping("/user/{id}")
@@ -51,18 +43,18 @@ public class AdminRestController {
     }
 
     @PostMapping(value = "/user")
-    public ResponseEntity<User> saveUser(@RequestBody @Valid User user, BindingResult bindingResult) {
+    public ResponseEntity<?> saveUser(@Valid @RequestBody User user, BindingResult bindingResult) {
+        usernameValidator.validate(user, bindingResult);
         if (bindingResult.hasErrors()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
         }
         userService.saveUser(user);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
-    @PatchMapping("/user/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable("id") Long id, @RequestBody User user) {
-        user.setId(id);
-        userService.saveUser(user);
+    @PutMapping("/user")
+    public ResponseEntity<User> updateUser(@RequestBody User user) {
+        userService.updateUser(user);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

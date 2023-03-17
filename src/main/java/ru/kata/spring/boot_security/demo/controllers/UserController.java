@@ -10,7 +10,6 @@ import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 @Controller
-@CrossOrigin
 @RequestMapping(value = "/user")
 public class UserController {
 

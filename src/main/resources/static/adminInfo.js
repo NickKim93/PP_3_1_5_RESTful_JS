@@ -128,8 +128,10 @@ on(document, 'click', '.btnEdit', e => {
 editForm.addEventListener('submit', (e) => {
     e.preventDefault()
     let roles = roleArray(document.getElementById('editRoles'))
+    // const row = e.target.parentNode.parentNode
+    // idForm = row.firstElementChild.innerHTML
     fetch('/api/user', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
             'Content-type': 'application/json'
         },
